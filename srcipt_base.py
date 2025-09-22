@@ -17,22 +17,16 @@ logger = logging.getLogger(__name__)
 dirpath = Path(__file__).parent
 
 # armazenando o caminho ate o esquematico a ser compilado e executado a partir do diretorio pai
-sch = str(dirpath/".."/"Schematics"/"schematic_5.tse")
+sch = str(dirpath/".."/"Schematics"/"schematic_2.tse")
 
 # setando o caminho do arquivo que sera compilado para ser usado
 cpd = model.get_compiled_model_file(sch)
 
 
 
+
 # carregando o esquematico
 model.load(filename=sch)
-
-
-# set_component_property(component, property, value)
-#model.set_component_property('Grid Simulator1', 'Vb', 220)
-
-
-
 
 # compilando o esquematico
 model.compile()
@@ -41,43 +35,27 @@ model.compile()
 hil.load_model(file=cpd, vhil_device=True)
 
 
-def generate_pdf_report(file_name, time, voltage, power_p, power_q):
+
+def generate_pdf_report(file_name, time, voltage):
     
     pdf = FPDF()
     pdf.add_page()
     
-    # ----- Gráfico de Corrente e Tensao -----
-    plt.figure(figsize=(8, 4))
-    plt.plot(time, voltage, label='Tensao(V)', color='red' )
-    plt.ylim(200, 500)
-    plt.axhline(y=0, linewidth=0.7, color="black")
+    plt.figure()
+    plt.plot(time, voltage)
+    plt.xlabel("time")
+    plt.ylabel("voltage")
+    plt.title("V x t")
+    plt.ylim(-500,500)
+    plt.axhline(y=0,linewidth=0.7)
     plt.grid(True, which='both', linestyle='--', linewidth=0.7)
-    plt.legend()
-    plt.savefig("current_voltage.png", dpi=150, bbox_inches="tight")
+    plt.savefig("image.png", dpi=150, bbox_inches="tight")
     plt.close()
     
-    pdf.image("current_voltage.png", x=20, w=170)
-    pdf.ln(10)  # quebra de linha no PDF
-      
-    # ----- Gráfico de Potencias Ativa e Reativa -----
-    plt.figure(figsize=(8, 4))
-    plt.plot(time, power_p, label="Ativa(W)", color='blue')
-    plt.plot(time, power_q, label='Reativa(var)', color='red')
-    plt.ylim(-3500,3500)
-    plt.axhline(y=0, linewidth=0.7, color="black")
-    plt.grid(True, which='both', linestyle='--', linewidth=0.7)
-    plt.legend()
-    plt.savefig("power.png", dpi=150, bbox_inches="tight")
-    plt.close()
-    
-    pdf.image("power.png", x=20, w=170)
-    
-    # ----- Salvar PDF -----
+    pdf.image('image.png',x=20,w=170)
     pdf.output(file_name)
     
-    # limpar imagens temporárias
-    os.remove("current_voltage.png")
-    os.remove("power.png")
+    os.remove('image.png')
     
     
 
@@ -86,13 +64,13 @@ def generate_pdf_report(file_name, time, voltage, power_p, power_q):
 
 
 # decimation, numberOfChannels, numberOfSamples
-captureSettings = [300,3,1000]
+captureSettings = [300,1,1000]
 
 # triggerType, triggerSource, threshold, edge, triggerOffset
 triggerSettings = ['Forced']
 
 # signals for capturing
-channelSettings = ['VAB', 'POWER_P', 'POWER_Q']
+channelSettings = ['Probe1']
 
 capturedDataBuffer = []
 
@@ -112,12 +90,10 @@ if hil.start_capture(
     # unpack data from data buffer
     # singalNames = list with the names of the singals
     # yDataMatrix = 'numpy.ndarray' matrix with data values
-    # xData = 'numpy.array' wiht time data
-    (signalName, signals, tempo) = capturedDataBuffer[0]
+    # xDara = 'numpy.array' wiht time data
+    (signalName, tensao, tempo) = capturedDataBuffer[0]
     
-    VAB = signals[0].tolist()
-    POWER_P = signals[1].tolist()
-    POWER_Q = signals[2].tolist()
+    v = tensao[0].tolist()
     t = tempo.tolist()
     
 else:
@@ -126,4 +102,10 @@ else:
 
 hil.stop_simulation()
 
-generate_pdf_report('relatorio1.pdf', t, VAB,POWER_P, POWER_Q)
+generate_pdf_report('relatorio2.pdf',t,v)
+
+
+
+
+    
+    
